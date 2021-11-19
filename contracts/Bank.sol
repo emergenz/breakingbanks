@@ -4,7 +4,6 @@ pragma solidity 0.7.0;
 import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
 
-contract Bank is IBank {
 
     // The keyword "public" makes variables
     // accessible from other contracts
@@ -24,7 +23,15 @@ contract Bank is IBank {
     function withdraw(address token, uint256 amount)
         external
         override
-        returns (uint256) {}
+        returns (uint256) {
+        if(balances[msg.sender].deposit >= amount){
+            balances[msg.sender].deposit -= amount;
+            emit Deposit(msg.sender, token, amount);
+            return true;
+        }
+        return false;
+
+    }
 
     function borrow(address token, uint256 amount)
         external
