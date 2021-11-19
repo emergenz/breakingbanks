@@ -6,7 +6,15 @@ import "./interfaces/IPriceOracle.sol";
 
 contract Bank is IBank {
 
-    constructor(address _priceOracle, address _hakToken) {}
+    // The keyword "public" makes variables
+    // accessible from other contracts
+    address public minter;
+    mapping (address => Account) public balances;
+
+
+    constructor(address _priceOracle, address _hakToken) {
+        minter = msg.sender;
+    }
     function deposit(address token, uint256 amount)
         payable
         external
@@ -45,5 +53,7 @@ contract Bank is IBank {
         view
         public
         override
-        returns (uint256) {}
+        returns (uint256) {
+        return balances[msg.sender].deposit;
+    }
 }
