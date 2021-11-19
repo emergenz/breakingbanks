@@ -4,15 +4,14 @@ pragma solidity 0.7.0;
 import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
 
+contract Bank is IBank {
 
     // The keyword "public" makes variables
     // accessible from other contracts
-    address public minter;
     mapping (address => Account) public balances;
 
 
     constructor(address _priceOracle, address _hakToken) {
-        minter = msg.sender;
     }
     function deposit(address token, uint256 amount)
         payable
@@ -24,13 +23,20 @@ import "./interfaces/IPriceOracle.sol";
         external
         override
         returns (uint256) {
-        if(balances[msg.sender].deposit >= amount){
-            balances[msg.sender].deposit -= amount;
-            emit Deposit(msg.sender, token, amount);
-            return true;
+        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
+            if(amount == 0){
+                uint256 withdrawal = balances[msg.sender].deposit;
+                balances[msg.sender].deposit = 0;
+                emit Withdraw(msg.sender, token, withdrawal);
+                return withdrawal;
+            }
+            if(balances[msg.sender].deposit >= amount){
+                balances[msg.sender].deposit -=amount;
+                emit Withdraw(msg.sender, token, amount);
+                return amount;
+            }
         }
-        return false;
-
+        revert("token not supported");
     }
 
     function borrow(address token, uint256 amount)
@@ -61,7 +67,7 @@ import "./interfaces/IPriceOracle.sol";
         public
         override
         returns (uint256) {
-        initAccount();
+        //initAccount();
         return balances[msg.sender].deposit;
     }
     /*
