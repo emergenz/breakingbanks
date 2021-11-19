@@ -54,6 +54,14 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
+        initAccount();
         return balances[msg.sender].deposit;
     }
+    /*
+    function initAccount() private {
+        if(bytes(balances[msg.sender]).length == 0){
+            balances[msg.sender] = Account(0, 0, 0);
+        }
+    }
+    */
 }
