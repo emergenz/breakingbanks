@@ -17,12 +17,15 @@ contract Bank is IBank {
         payable
         external
         override
-        returns (bool) {}
+        returns (bool) {
+        initAccount();
+    }
 
     function withdraw(address token, uint256 amount)
         external
         override
         returns (uint256) {
+        initAccount();
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
             if(amount == 0){
                 uint256 withdrawal = balances[msg.sender].deposit;
@@ -42,19 +45,25 @@ contract Bank is IBank {
     function borrow(address token, uint256 amount)
         external
         override
-        returns (uint256) {}
+        returns (uint256) {
+        initAccount();
+    }
 
     function repay(address token, uint256 amount)
         payable
         external
         override
-        returns (uint256) {}
+        returns (uint256) {
+        initAccount();
+    }
 
     function liquidate(address token, address account)
         payable
         external
         override
-        returns (bool) {}
+        returns (bool) {
+        initAccount();
+    }
 
     function getCollateralRatio(address token, address account)
         view
@@ -67,14 +76,24 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
-        //initAccount();
         return balances[msg.sender].deposit;
     }
-    /*
+
     function initAccount() private {
-        if(bytes(balances[msg.sender]).length == 0){
+        // workaround: checking whether account has already been initialized.
+        // this only works if we immediately compute the interest upon account
+        // initialization and 'lastInterestBlock' is set to a non-zero value
+        if(balances[msg.sender].lastInterestBlock == 0){
             balances[msg.sender] = Account(0, 0, 0);
+            calculateDepositInterest();
         }
     }
-    */
+
+    function calculateDepositInterest() private {
+        // TODO: actual calculation not implemented yet
+
+        // set lastInterestBlock to current block
+        // FIXME: is block.number right?
+        balances[msg.sender].lastInterestBlock = block.number;
+    }
 }
