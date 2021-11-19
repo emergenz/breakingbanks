@@ -25,8 +25,9 @@ contract Bank is IBank {
         external
         override
         returns (uint256) {
-        initAccount();
-        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
+        if(token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token != 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+            revert("token not supported");
+        }
             if(amount == 0){
                 uint256 withdrawal = balances[msg.sender].deposit;
                 balances[msg.sender].deposit = 0;
@@ -37,9 +38,11 @@ contract Bank is IBank {
                 balances[msg.sender].deposit -=amount;
                 emit Withdraw(msg.sender, token, amount);
                 return amount;
+            }else {
+                revert("amount exceeds balance");
             }
-        }
-        revert("token not supported");
+
+        revert("Something went wrong");
     }
 
     function borrow(address token, uint256 amount)
