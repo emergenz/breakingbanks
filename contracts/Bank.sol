@@ -29,20 +29,18 @@ contract Bank is IBank {
             revert("token not supported");
         }
         if(amount == 0){
-                uint256 withdrawal = balances[msg.sender].deposit;
-                balances[msg.sender].deposit = 0;
-                emit Withdraw(msg.sender, token, withdrawal);
-                return withdrawal;
-            }
-            if(balances[msg.sender].deposit >= amount){
-                balances[msg.sender].deposit -=amount;
-                emit Withdraw(msg.sender, token, amount);
-                return amount;
-            }else {
-                revert("amount exceeds balance");
-            }
-
-        revert("Something went wrong");
+            uint256 withdrawal = balances[msg.sender].deposit;
+            balances[msg.sender].deposit = 0;
+            emit Withdraw(msg.sender, token, withdrawal);
+            return withdrawal;
+        }
+        if(balances[msg.sender].deposit >= amount){
+            balances[msg.sender].deposit -=amount;
+            emit Withdraw(msg.sender, token, amount);
+            return amount;
+        } else {
+             revert("amount exceeds balance");
+        }
     }
 
     function borrow(address token, uint256 amount)
