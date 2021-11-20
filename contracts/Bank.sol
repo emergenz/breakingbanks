@@ -19,7 +19,12 @@ contract Bank is IBank {
         override
         returns (bool) {
         initAccount();
-    }
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
+        require(amount > 0, "Amount to deposit should be greater than 0");
+        balances[msg.sender].deposit = balances[msg.sender].deposit + amount;
+        emit Deposit(msg.sender, token, amount);
+        return true;
+   }
 
     function withdraw(address token, uint256 amount)
         external
