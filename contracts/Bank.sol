@@ -56,20 +56,27 @@ contract Bank is IBank {
             uint256 withdrawal = balances[msg.sender][x].deposit;
             msg.sender.transfer(withdrawal);
             balances[msg.sender][x].deposit = 0;
-            // TODO: interest
-            balances[msg.sender][x].interest += calculateInterest(token);
-            emit Withdraw(msg.sender, token, withdrawal);
-            return withdrawal;
+            if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+                balances[msg.sender][x].interest += calculateInterest(token);
+            } else if (token == hakToken) {
+                ERC20 t = ERC20(token);
+                if(t.transferFrom(address(this), msg.sender, amount)){
+                    balances[msg.sender][x].interest += calculateInterest(token);
+                } else {
+                    revert("transferFrom failed");
+                }
+            }
+            emit Withdraw(msg.sender, token, withdrawal + balances[msg.sender][x].interest);
+            return withdrawal + balances[msg.sender][x].interest;
         }
         else if (balances[msg.sender][x].deposit >= amount){
             msg.sender.transfer(amount);
             balances[msg.sender][x].deposit -=amount;
-            // TODO: nterest
+            // TODO: interest
             balances[msg.sender][x].interest += calculateInterest(token);
-            emit Withdraw(msg.sender, token, amount);
-            return amount;
-
-         } else {
+            emit Withdraw(msg.sender, token, amount + balances[msg.sender][x].interest);
+            return amount + balances[msg.sender][x].interest;
+        } else {
             revert("amount exceeds balance");
         }
     }
@@ -141,7 +148,7 @@ contract Bank is IBank {
         uint x;
         token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
 
-        uint256 interest = ((block.number - balances[msg.sender][x].lastInterestBlock) * 3) / 10;
+        uint256 interest = ((block.number - balances[msg.sender][x].lastInterestBlock) * 3);
 
         // set lastInterestBlock to current block
 
