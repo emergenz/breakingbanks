@@ -8,7 +8,7 @@ contract Bank is IBank {
 
     // The keyword "public" makes variables
     // accessible from other contracts
-    mapping (address => Account) public balances;
+    mapping (address => Account[2]) public balances;
 
 
     constructor(address _priceOracle, address _hakToken) {
@@ -30,21 +30,21 @@ contract Bank is IBank {
         external
         override
         returns (uint256) {
-        initAccount();
-        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
-            if(amount == 0){
-                uint256 withdrawal = balances[msg.sender].deposit;
-                balances[msg.sender].deposit = 0;
-                emit Withdraw(msg.sender, token, withdrawal);
-                return withdrawal;
-            }
-            if(balances[msg.sender].deposit >= amount){
-                balances[msg.sender].deposit -=amount;
-                emit Withdraw(msg.sender, token, amount);
-                return amount;
-            }
+        require (balances[msg.sender].deposit > 0, "no balance");
+        require (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token != 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+        if (amount == 0){
+            uint256 withdrawal = balances[msg.sender].deposit;
+            balances[msg.sender].deposit = 0;
+            emit Withdraw(msg.sender, token, withdrawal);
+            return withdrawal;
         }
-        revert("token not supported");
+        if(balances[msg.sender].deposit >= amount){
+            balances[msg.sender].deposit -=amount;
+            emit Withdraw(msg.sender, token, amount);
+            return amount;
+        } else {
+            revert("amount exceeds balance");
+        }
     }
 
     function borrow(address token, uint256 amount)
@@ -88,8 +88,12 @@ contract Bank is IBank {
         // workaround: checking whether account has already been initialized.
         // this only works if we immediately compute the interest upon account
         // initialization and 'lastInterestBlock' is set to a non-zero value
-        if(balances[msg.sender].lastInterestBlock == 0){
-            balances[msg.sender] = Account(0, 0, 0);
+        if(balances[msg.sender][0].lastInterestBlock == 0){
+            balances[msg.sender][0] = Account(0, 0, 0);
+            calculateDepositInterest();
+        }
+        if(balances[msg.sender][1].lastInterestBlock == 0){
+            balances[msg.sender][1] = Account(0, 0, 0);
             calculateDepositInterest();
         }
     }
