@@ -28,9 +28,15 @@ contract Bank is IBank {
         initAccount();
         require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == token,  "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
+
+        uint x;
+        token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+
+        balances[msg.sender][x].interest += (balances[msg.sender][x].deposit / 10000 * (block.number - balances[msg.sender][x].lastInterestBlock) * 3);
+        balances[msg.sender][x].lastInterestBlock = block.number;
+
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
 
-            balances[msg.sender][0].interest += calculateInterest(token);
             require(msg.value == amount, "given amount and transferred money didnt match");
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
             emit Deposit(msg.sender, token, amount + balances[msg.sender][0].interest);
@@ -38,7 +44,6 @@ contract Bank is IBank {
             ERC20 t = ERC20(token);
             if(t.transferFrom(msg.sender, address(this), amount)){
                 balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
-                balances[msg.sender][1].interest += calculateInterest(token);
                 emit Deposit(msg.sender, token, amount+balances[msg.sender][1].interest);
             }
         }
@@ -53,6 +58,10 @@ contract Bank is IBank {
         // x = Account-Index (0 for ETH, 1 for HAK)
         uint x;
         token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+
+        balances[msg.sender][x].interest += (balances[msg.sender][x].deposit / 10000* (block.number - balances[msg.sender][x].lastInterestBlock) * 3);
+        balances[msg.sender][x].lastInterestBlock = block.number;
+
         require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == hakToken, "token not supported");
         require (balances[msg.sender][x].deposit > 0, "no balance");
         if (amount == 0){
@@ -60,11 +69,9 @@ contract Bank is IBank {
             msg.sender.transfer(withdrawal);
             balances[msg.sender][x].deposit = 0;
             if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
-                balances[msg.sender][x].interest += calculateInterest(token);
             } else if (token == hakToken) {
                 ERC20 t = ERC20(token);
                 if(t.transfer(msg.sender, amount)){
-                    balances[msg.sender][x].interest += calculateInterest(token);
                 } else {
                     revert("transferFrom failed");
                 }
@@ -76,7 +83,6 @@ contract Bank is IBank {
             msg.sender.transfer(amount);
             balances[msg.sender][x].deposit -=amount;
             // TODO: interest
-            balances[msg.sender][x].interest += calculateInterest(token);
             emit Withdraw(msg.sender, token, amount + balances[msg.sender][x].interest);
             return amount + balances[msg.sender][x].interest;
         } else {
@@ -124,13 +130,11 @@ contract Bank is IBank {
         returns (uint256) {
 
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
-
-            uint256 interest = ((block.number - balances[msg.sender][0].lastInterestBlock) * 3);
+            uint256 interest = ((block.number - balances[msg.sender][0].lastInterestBlock) * 3)+balances[msg.sender][0].interest;
             return balances[msg.sender][0].deposit+interest;
         } else if (token == hakToken){
-
-            uint256 interest = ((block.number - balances[msg.sender][1].lastInterestBlock) * 3);
-            return balances[msg.sender][1].deposit;
+            uint256 interest = ((block.number - balances[msg.sender][1].lastInterestBlock) * 3)+balances[msg.sender][1].interest;
+            return balances[msg.sender][1].deposit+interest;
         } else {
             revert("token not supported");
         }
@@ -147,7 +151,7 @@ contract Bank is IBank {
 
         if(balances[msg.sender][1].lastInterestBlock == 0){
             balances[msg.sender][1] = Account(0, 0, 0);
-            calculateInterest(0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C);
+            calculateInterest(hakToken);
         }
     }
 
