@@ -143,7 +143,7 @@ contract Bank is IBank {
 
             initAccount();
 
-           require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
+            require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
 
             uint x = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
 
@@ -157,13 +157,14 @@ contract Bank is IBank {
             require(_collateral_ratio != 0, "nothing to repay");
             require(_collateral_ratio >= 15000, "borrow would exceed collateral ratio");
 
+            require(msg.value >= amount, "msg.value < amount to repay");
            if (amount == 0) {
                 // deposit : collateral_ratio = x : 15000
                 uint256 _max = balances[msg.sender][1].deposit.mul(15000).div(_collateral_ratio);
-                borrowed[msg.sender] = borrowed[msg.sender].add(convertHAKToETH(_max));
+                borrowed[msg.sender] = borrowed[msg.sender].sub(convertHAKToETH(_max));
             }
 
-            emit Borrow(msg.sender, token, amount, _collateral_ratio);
+            emit Repay(msg.sender, token, amount);
 
             isLocked = false;
         }
