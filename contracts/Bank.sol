@@ -163,6 +163,7 @@ contract Bank is IBank {
             uint256 _deposit = convertHAKToETH(balances[account][1].deposit);
             uint256 _interest = convertHAKToETH(balances[account][1].interest);
             uint256 _borrowed = borrowed[account];
+            console.log(_interest);
 
             if (_deposit == 0) {
                 return 0;
