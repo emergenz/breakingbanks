@@ -19,9 +19,13 @@ contract Bank is IBank {
         override
         returns (bool) {
         initAccount();
-        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
-        balances[msg.sender].deposit = balances[msg.sender].deposit + amount;
+        if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
+            balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
+        } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+            balances[msg.sender][1].deposit = balances[msg.sender][0].deposit + amount;
+        }
         emit Deposit(msg.sender, token, amount);
         return true;
    }
@@ -30,11 +34,12 @@ contract Bank is IBank {
         external
         override
         returns (uint256) {
-        require (balances[msg.sender].deposit > 0, "no balance");
-        require (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token != 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+            /*
+        require (balances[msg.sender][0].deposit > 0, "no balance");
+        require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
         if (amount == 0){
             uint256 withdrawal = balances[msg.sender].deposit;
-            balances[msg.sender].deposit = 0;
+            balances[msg.sender][0].deposit = 0;
             emit Withdraw(msg.sender, token, withdrawal);
             return withdrawal;
         }
@@ -45,6 +50,7 @@ contract Bank is IBank {
         } else {
             revert("amount exceeds balance");
         }
+        */
     }
 
     function borrow(address token, uint256 amount)
@@ -81,7 +87,7 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
-        return balances[msg.sender].deposit;
+        return balances[msg.sender][0].deposit;
     }
 
     function initAccount() private {
@@ -103,6 +109,6 @@ contract Bank is IBank {
 
         // set lastInterestBlock to current block
         // FIXME: is block.number right?
-        balances[msg.sender].lastInterestBlock = block.number;
+        balances[msg.sender][0].lastInterestBlock = block.number;
     }
 }
