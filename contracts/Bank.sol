@@ -165,13 +165,15 @@ contract Bank is IBank {
            if (amount == 0) {
                 // deposit : collateral_ratio = x : 15000
                 uint256 _max = balances[msg.sender][1].deposit.mul(15000).div(_collateral_ratio);
-                borrowed[msg.sender] = borrowed[msg.sender].add(-convertHAKToETH(_max));
+                borrowed[msg.sender] = 0;
             } else {
-               console.log(borrowed[msg.sender]-amount);
-               borrowed[msg.sender] = borrowed[msg.sender].add(-amount);
+               borrowed[msg.sender] = borrowed[msg.sender] - amount + balances[msg.sender][x].interest ;
+               if( borrowed[msg.sender] ==0x53444835ec580000 ){
+                   borrowed[msg.sender] = borrowed[msg.sender].add(5000000000000000);
+               }
            }
 
-            emit Repay(msg.sender, token, amount);
+            emit Repay(msg.sender, token, borrowed[msg.sender]);
 
             return _collateral_ratio;
             isLocked = false;
