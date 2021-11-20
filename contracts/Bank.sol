@@ -19,7 +19,7 @@ contract Bank is IBank {
         override
         returns (bool) {
         initAccount();
-        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+       require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
@@ -106,19 +106,27 @@ contract Bank is IBank {
         // initialization and 'lastInterestBlock' is set to a non-zero value
         if(balances[msg.sender][0].lastInterestBlock == 0){
             balances[msg.sender][0] = Account(0, 0, 0);
-            calculateDepositInterest();
+            calculateDepositInterest(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
         }
+
         if(balances[msg.sender][1].lastInterestBlock == 0){
             balances[msg.sender][1] = Account(0, 0, 0);
-            calculateDepositInterest();
+            calculateDepositInterest(0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C);
         }
     }
 
-    function calculateDepositInterest() private {
+    function calculateDepositInterest(address token) private {
         // TODO: actual calculation not implemented yet
+        uint x;
+        token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+
+        uint256 interest = ((block.number - balances[msg.sender][x].lastInterestBlock) * 3) / 10;
 
         // set lastInterestBlock to current block
+
         // FIXME: is block.number right?
-        //balances[msg.sender].lastInterestBlock = block.number;
+        balances[msg.sender][x].lastInterestBlock = block.number;
+
+
     }
 }
