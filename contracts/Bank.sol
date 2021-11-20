@@ -8,6 +8,9 @@ contract Bank is IBank {
 
     // The keyword "public" makes variables
     // accessible from other contracts
+
+    // Account[0] is ETH-Account
+    // Account[1] is HAK-Account
     mapping (address => Account[2]) public balances;
 
 
@@ -25,15 +28,23 @@ contract Bank is IBank {
         external
         override
         returns (uint256) {
+
         require (balances[msg.sender].deposit > 0, "no balance");
-        require (token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token != 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+        require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+
+        // x = Account-Index (0 for ETH, 1 for HAK)
+        int x  = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
+
         if (amount == 0){
-            uint256 withdrawal = balances[msg.sender].deposit;
-            balances[msg.sender].deposit = 0;
+            uint256 withdrawal = balances[msg.sender][x].deposit;
+            balances[msg.sender][x].deposit = 0;
+            // TODO: interest
+            calculateDepositInterest();
             emit Withdraw(msg.sender, token, withdrawal);
             return withdrawal;
         }
-        if(balances[msg.sender].deposit >= amount){
+
+        if(balances[msg.sender][x].deposit >= amount){
             balances[msg.sender].deposit -=amount;
             emit Withdraw(msg.sender, token, amount);
             return amount;
