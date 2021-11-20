@@ -27,7 +27,7 @@ contract Bank is IBank {
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
         } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
-            balances[msg.sender][1].deposit = balances[msg.sender][0].deposit + amount;
+            balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
         }
         emit Deposit(msg.sender, token, amount);
         return true;
@@ -37,24 +37,24 @@ contract Bank is IBank {
         external
         override
         returns (uint256) {
-        require (balances[msg.sender].deposit > 0, "no balance");
-        require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
-
         // x = Account-Index (0 for ETH, 1 for HAK)
-        int x  = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
+        uint x;
+        token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+        require (balances[msg.sender][x].deposit > 0, "no balance");
+        require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
 
         if (amount == 0){
             uint256 withdrawal = balances[msg.sender][x].deposit;
             balances[msg.sender][x].deposit = 0;
             // TODO: interest
-            calculateDepositInterest();
+            balances[msg.sender][x].interest += calculateDepositInterest(token);
             emit Withdraw(msg.sender, token, withdrawal);
             return withdrawal;
         }
-        if (balances[msg.sender][x].deposit >= amount){
-            balances[msg.sender].deposit -=amount;
-            // TODO: interest
-            calculateDepositInterest();
+        else if (balances[msg.sender][x].deposit >= amount){
+            balances[msg.sender][x].deposit -=amount;
+            // TODO: nterest
+            balances[msg.sender][x].interest += calculateDepositInterest(token);
             emit Withdraw(msg.sender, token, amount);
             return amount;
         } else {
@@ -124,7 +124,7 @@ contract Bank is IBank {
         }
     }
 
-    function calculateDepositInterest(address token) private {
+    function calculateDepositInterest(address token) private returns (uint256){
         // TODO: actual calculation not implemented yet
         uint x;
         token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
@@ -136,6 +136,7 @@ contract Bank is IBank {
         // FIXME: is block.number right?
         balances[msg.sender][x].lastInterestBlock = block.number;
 
+        return interest;
 
     }
 }
