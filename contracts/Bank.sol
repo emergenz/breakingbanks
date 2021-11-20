@@ -60,7 +60,7 @@ contract Bank is IBank {
                 balances[msg.sender][x].interest += calculateInterest(token);
             } else if (token == hakToken) {
                 ERC20 t = ERC20(token);
-                if(t.transferFrom(address(this), msg.sender, amount)){
+                if(t.transfer(msg.sender, amount)){
                     balances[msg.sender][x].interest += calculateInterest(token);
                 } else {
                     revert("transferFrom failed");
