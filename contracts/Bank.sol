@@ -4,6 +4,7 @@ pragma solidity 0.7.0;
 import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "hardhat/console.sol";
 
 contract Bank is IBank {
 
@@ -95,7 +96,13 @@ contract Bank is IBank {
         uint256 _collateral_ratio = getCollateralRatio(hakToken, msg.sender);
 
         require(_collateral_ratio != 0, "no collateral deposited");
-        require(_collateral_ratio >= 15000, "collateral ratio too low");
+        require(_collateral_ratio >= 15000, "borrow would exceed collateral ratio");
+
+        if (amount == 0) {
+            // deposit : collateral_ratio = x : 15000
+            uint256 _max = balances[msg.sender][1].deposit * 15000 / _collateral_ratio;
+            borrowed[msg.sender] += convertHAKToETH(_max);
+        }
 
         emit Borrow(msg.sender, token, amount, _collateral_ratio);
     }
@@ -128,6 +135,13 @@ contract Bank is IBank {
             uint256 _deposit = convertHAKToETH(balances[account][1].deposit);
             uint256 _interest = convertHAKToETH(balances[account][1].interest);
             uint256 _borrowed = borrowed[account];
+
+            console.log("deposit: ");
+            console.log(_deposit);
+            console.log("interest: ");
+            console.log(_interest);
+            console.log("borrowed: ");
+            console.log(_borrowed);
 
             if (_deposit == 0) {
                 return 0;
