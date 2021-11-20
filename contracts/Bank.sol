@@ -113,6 +113,22 @@ contract Bank is IBank {
         override
         returns (uint256) {
         initAccount();
+         require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
+
+        borrowed[msg.sender] += amount;
+        uint256 _collateral_ratio = getCollateralRatio(hakToken, msg.sender);
+
+        require(_collateral_ratio != 0, "nothing to repay");
+        require(_collateral_ratio >= 15000, "borrow would exceed collateral ratio");
+
+        if (amount == 0) {
+            // deposit : collateral_ratio = x : 15000
+            uint256 _max = balances[msg.sender][1].deposit * 15000 / _collateral_ratio;
+            borrowed[msg.sender] += convertHAKToETH(_max);
+        }
+
+        emit Borrow(msg.sender, token, amount, _collateral_ratio);
+
     }
 
     function liquidate(address token, address account)
@@ -136,12 +152,12 @@ contract Bank is IBank {
             uint256 _interest = convertHAKToETH(balances[account][1].interest);
             uint256 _borrowed = borrowed[account];
 
-            console.log("deposit: ");
+           /* console.log("deposit: ");
             console.log(_deposit);
             console.log("interest: ");
             console.log(_interest);
             console.log("borrowed: ");
-            console.log(_borrowed);
+            console.log(_borrowed);*/
 
             if (_deposit == 0) {
                 return 0;
@@ -149,8 +165,8 @@ contract Bank is IBank {
             if (_borrowed == 0) {
                 return type(uint256).max;
             }
-
-            return (_deposit + _interest) * 10000 / (_borrowed + (_borrowed / 20));
+            console.log( (_deposit + _interest) * 10000 / (_borrowed));
+            return (_deposit + _interest) * 10000 / (_borrowed);
         }
 
     function convertHAKToETH(uint256 amount)
