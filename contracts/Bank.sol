@@ -3,6 +3,7 @@ pragma solidity 0.7.0;
 
 import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Bank is IBank {
 
@@ -13,7 +14,7 @@ contract Bank is IBank {
     // Account[1] is HAK-Account
     mapping (address => Account[2]) public balances;
     address hakToken;
-
+    bool isLocked = false;
 
     constructor(address _priceOracle, address _hakToken) {
         hakToken = _hakToken;
@@ -23,15 +24,20 @@ contract Bank is IBank {
         external
         override
         returns (bool) {
+        isLocked = true;
         initAccount();
-        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853,  "token not supported");
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == token,  "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
         } else if (token == hakToken){
-            balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
+            ERC20 t = ERC20(token);
+            if(t.transferFrom(msg.sender, address(this), amount)){
+                balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
+            }
         }
         emit Deposit(msg.sender, token, amount);
+        isLocked = false;
         return true;
    }
 
@@ -42,9 +48,8 @@ contract Bank is IBank {
         // x = Account-Index (0 for ETH, 1 for HAK)
         uint x;
         token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+        require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == hakToken, "token not supported");
         require (balances[msg.sender][x].deposit > 0, "no balance");
-        require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
-
         if (amount == 0){
             uint256 withdrawal = balances[msg.sender][x].deposit;
             balances[msg.sender][x].deposit = 0;
@@ -104,7 +109,7 @@ contract Bank is IBank {
         returns (uint256) {
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
             return balances[msg.sender][0].deposit;
-        } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+        } else if (token == hakToken){
             return balances[msg.sender][1].deposit;
         } else {
             revert("token not supported");
