@@ -12,12 +12,15 @@ contract Bank is IBank {
 
     // Account[0] is ETH-Account
     // Account[1] is HAK-Account
-    mapping (address => Account[2]) public balances;
+    mapping (address => Account[2]) private balances;
+    mapping (address => uint256) private borrowed;
     address hakToken;
+    IPriceOracle oracle;
     bool isLocked = false;
 
     constructor(address _priceOracle, address _hakToken) {
         hakToken = _hakToken;
+        oracle = IPriceOracle(_priceOracle);
     }
     function deposit(address token, uint256 amount)
         payable
@@ -86,10 +89,15 @@ contract Bank is IBank {
         override
         returns (uint256) {
         initAccount();
-        if(token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
-            revert("token not supported");
-        }
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
 
+        borrowed[msg.sender] += amount;
+        uint256 _collateral_ratio = getCollateralRatio(hakToken, msg.sender);
+
+        require(_collateral_ratio != 0, "no collateral deposited");
+        require(_collateral_ratio >= 15000, "collateral ratio too low");
+
+        emit Borrow(msg.sender, token, amount, _collateral_ratio);
     }
 
     function repay(address token, uint256 amount)
@@ -112,7 +120,31 @@ contract Bank is IBank {
         view
         public
         override
-        returns (uint256) {}
+        returns (uint256) {
+            if(token != hakToken){
+                revert("token not supported");
+            }
+
+            uint256 _deposit = convertHAKToETH(balances[account][1].deposit);
+            uint256 _interest = convertHAKToETH(balances[account][1].interest);
+            uint256 _borrowed = borrowed[account];
+
+            if (_deposit == 0) {
+                return 0;
+            }
+            if (_borrowed == 0) {
+                return type(uint256).max;
+            }
+
+            return (_deposit + _interest) * 10000 / (_borrowed + (_borrowed / 20));
+        }
+
+    function convertHAKToETH(uint256 amount)
+        view
+        private
+        returns (uint256) {
+            return amount * oracle.getVirtualPrice(hakToken) / 1000000000000000000;
+        }
 
     function getBalance(address token)
         view
