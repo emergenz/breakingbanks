@@ -29,14 +29,16 @@ contract Bank is IBank {
         require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == token,  "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
+            require(msg.value == amount, "given amount and transferred money didnt match");
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
+            emit Deposit(msg.sender, token, amount);
         } else if (token == hakToken){
             ERC20 t = ERC20(token);
             if(t.transferFrom(msg.sender, address(this), amount)){
                 balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
+                emit Deposit(msg.sender, token, amount);
             }
         }
-        emit Deposit(msg.sender, token, amount);
         isLocked = false;
         return true;
    }
@@ -52,6 +54,7 @@ contract Bank is IBank {
         require (balances[msg.sender][x].deposit > 0, "no balance");
         if (amount == 0){
             uint256 withdrawal = balances[msg.sender][x].deposit;
+            msg.sender.transfer(withdrawal);
             balances[msg.sender][x].deposit = 0;
             // TODO: interest
             balances[msg.sender][x].interest += calculateInterest(token);
@@ -59,12 +62,14 @@ contract Bank is IBank {
             return withdrawal;
         }
         else if (balances[msg.sender][x].deposit >= amount){
+            msg.sender.transfer(amount);
             balances[msg.sender][x].deposit -=amount;
             // TODO: nterest
             balances[msg.sender][x].interest += calculateInterest(token);
             emit Withdraw(msg.sender, token, amount);
             return amount;
-        } else {
+
+         } else {
             revert("amount exceeds balance");
         }
     }
