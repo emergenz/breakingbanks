@@ -22,13 +22,21 @@ contract Bank is IBank {
         override
         returns (bool) {
         initAccount();
-    }
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+        require(amount > 0, "Amount to deposit should be greater than 0");
+        if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
+            balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
+        } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+            balances[msg.sender][1].deposit = balances[msg.sender][0].deposit + amount;
+        }
+        emit Deposit(msg.sender, token, amount);
+        return true;
+   }
 
     function withdraw(address token, uint256 amount)
         external
         override
         returns (uint256) {
-
         require (balances[msg.sender].deposit > 0, "no balance");
         require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
 
@@ -43,9 +51,10 @@ contract Bank is IBank {
             emit Withdraw(msg.sender, token, withdrawal);
             return withdrawal;
         }
-
-        if(balances[msg.sender][x].deposit >= amount){
+        if (balances[msg.sender][x].deposit >= amount){
             balances[msg.sender].deposit -=amount;
+            // TODO: interest
+            calculateDepositInterest();
             emit Withdraw(msg.sender, token, amount);
             return amount;
         } else {
@@ -58,6 +67,10 @@ contract Bank is IBank {
         override
         returns (uint256) {
         initAccount();
+        if(token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
+            revert("token not supported");
+        }
+
     }
 
     function repay(address token, uint256 amount)
@@ -87,7 +100,13 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
-        return balances[msg.sender].deposit;
+        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
+            return balances[msg.sender][0].deposit;
+        } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+            return balances[msg.sender][1].deposit;
+        } else {
+            revert("token not supported");
+        }
     }
 
     function initAccount() private {
@@ -109,6 +128,6 @@ contract Bank is IBank {
 
         // set lastInterestBlock to current block
         // FIXME: is block.number right?
-        balances[msg.sender].lastInterestBlock = block.number;
+        balances[msg.sender][0].lastInterestBlock = block.number;
     }
 }
