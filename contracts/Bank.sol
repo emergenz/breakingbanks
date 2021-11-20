@@ -151,18 +151,19 @@ contract Bank is IBank {
             balances[msg.sender][x].lastInterestBlock = block.number;
 
 
-            borrowed[msg.sender] = borrowed[msg.sender].add(amount);
             uint256 _collateral_ratio = getCollateralRatio(hakToken, msg.sender);
 
             require(_collateral_ratio != 0, "nothing to repay");
-            require(_collateral_ratio >= 15000, "borrow would exceed collateral ratio");
-
             require(msg.value >= amount, "msg.value < amount to repay");
+
            if (amount == 0) {
                 // deposit : collateral_ratio = x : 15000
                 uint256 _max = balances[msg.sender][1].deposit.mul(15000).div(_collateral_ratio);
                 borrowed[msg.sender] = borrowed[msg.sender].add(-convertHAKToETH(_max));
-            }
+            } else {
+               console.log(borrowed[msg.sender]-amount);
+               borrowed[msg.sender] = borrowed[msg.sender].add(-amount);
+           }
 
             emit Repay(msg.sender, token, amount);
 
