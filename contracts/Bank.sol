@@ -4,6 +4,7 @@ pragma solidity 0.7.0;
 import "./interfaces/IBank.sol";
 import "./interfaces/IPriceOracle.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "hardhat/console.sol";
 
 contract Bank is IBank {
 
@@ -104,7 +105,13 @@ contract Bank is IBank {
         uint256 _collateral_ratio = getCollateralRatio(hakToken, msg.sender);
 
         require(_collateral_ratio != 0, "no collateral deposited");
-        require(_collateral_ratio >= 15000, "collateral ratio too low");
+        require(_collateral_ratio >= 15000, "borrow would exceed collateral ratio");
+
+        if (amount == 0) {
+            // deposit : collateral_ratio = x : 15000
+            uint256 _max = balances[msg.sender][1].deposit * 15000 / _collateral_ratio;
+            borrowed[msg.sender] += convertHAKToETH(_max);
+        }
 
         emit Borrow(msg.sender, token, amount, _collateral_ratio);
     }
@@ -115,6 +122,22 @@ contract Bank is IBank {
         override
         returns (uint256) {
         initAccount();
+         require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
+
+        borrowed[msg.sender] += amount;
+        uint256 _collateral_ratio = getCollateralRatio(hakToken, msg.sender);
+
+        require(_collateral_ratio != 0, "nothing to repay");
+        require(_collateral_ratio >= 15000, "borrow would exceed collateral ratio");
+
+        if (amount == 0) {
+            // deposit : collateral_ratio = x : 15000
+            uint256 _max = balances[msg.sender][1].deposit * 15000 / _collateral_ratio;
+            borrowed[msg.sender] += convertHAKToETH(_max);
+        }
+
+        emit Borrow(msg.sender, token, amount, _collateral_ratio);
+
     }
 
     function liquidate(address token, address account)
@@ -122,8 +145,11 @@ contract Bank is IBank {
         external
         override
         returns (bool) {
-        initAccount();
-    }
+            initAccount();
+            require(token == hakToken, "token not supported");
+            require(account != msg.sender, "cannot liquidate own position");
+            require(getCollateralRatio(token, account) < 15000, "healty position");
+        }
 
     function getCollateralRatio(address token, address account)
         view
@@ -144,8 +170,8 @@ contract Bank is IBank {
             if (_borrowed == 0) {
                 return type(uint256).max;
             }
-
-            return (_deposit + _interest) * 10000 / (_borrowed + (_borrowed / 20));
+            console.log( (_deposit + _interest) * 10000 / (_borrowed));
+            return (_deposit + _interest) * 10000 / (_borrowed);
         }
 
     function convertHAKToETH(uint256 amount)
