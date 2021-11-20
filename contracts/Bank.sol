@@ -129,5 +129,6 @@ contract Bank is IBank {
         // set lastInterestBlock to current block
         // FIXME: is block.number right?
         balances[msg.sender][0].lastInterestBlock = block.number;
+
     }
 }
