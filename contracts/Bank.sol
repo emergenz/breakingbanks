@@ -161,7 +161,7 @@ contract Bank is IBank {
            if (amount == 0) {
                 // deposit : collateral_ratio = x : 15000
                 uint256 _max = balances[msg.sender][1].deposit.mul(15000).div(_collateral_ratio);
-                borrowed[msg.sender] = borrowed[msg.sender].sub(convertHAKToETH(_max));
+                borrowed[msg.sender] = borrowed[msg.sender].add(-convertHAKToETH(_max));
             }
 
             emit Repay(msg.sender, token, amount);
