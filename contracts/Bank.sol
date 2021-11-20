@@ -40,8 +40,6 @@ contract Bank is IBank {
         } else {
             revert("amount exceeds balance");
         }
-
-        revert("Something went wrong");
     }
 
     function borrow(address token, uint256 amount)
