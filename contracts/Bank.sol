@@ -110,7 +110,7 @@ contract Bank is IBank {
             require(!isLocked);
             isLocked = true;
 
-           initAccount();
+            initAccount();
 
             require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
 
@@ -147,7 +147,7 @@ contract Bank is IBank {
            require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
 
             uint x;
-            token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+            token == 0xEeeeeEeeeEeEeeeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
 
             balances[msg.sender][x].interest = balances[msg.sender][x].interest.add(balances[msg.sender][x].deposit.div(10000).mul(block.number.sub(balances[msg.sender][x].lastInterestBlock)).mul(3));
             balances[msg.sender][x].lastInterestBlock = block.number;
@@ -233,6 +233,8 @@ contract Bank is IBank {
         } else {
             revert("token not supported");
         }
+
+
 
     function initAccount() private {
         // workaround: checking whether account has already been initialized.
