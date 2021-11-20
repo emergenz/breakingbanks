@@ -67,41 +67,46 @@ contract Bank is IBank {
             require(!isLocked);
             isLocked = true;
 
+            initAccount();
+
             // x = Account-Index (0 for ETH, 1 for HAK)
             uint x = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
+
+            require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == hakToken, "token not supported");
+            require (balances[msg.sender][x].deposit > 0, "no balance");
 
             balances[msg.sender][x].interest = balances[msg.sender][x].interest.add(balances[msg.sender][x].deposit.div(10000).mul(block.number.sub(balances[msg.sender][x].lastInterestBlock)).mul(3));
             balances[msg.sender][x].lastInterestBlock = block.number;
 
-            require (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == hakToken, "token not supported");
-            require (balances[msg.sender][x].deposit > 0, "no balance");
             if (amount == 0){
                 uint256 withdrawal = balances[msg.sender][x].deposit;
-                msg.sender.transfer(withdrawal);
                 balances[msg.sender][x].deposit = 0;
+
                 if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+                    msg.sender.transfer(withdrawal);
                 } else if (token == hakToken) {
                     ERC20 t = ERC20(token);
-                    if(t.transfer(msg.sender, amount)){
-                    } else {
-                        revert("transferFrom failed");
-                    }
+                    require (t.transfer(msg.sender, amount));
                 }
+
                 emit Withdraw(msg.sender, token, withdrawal.add(balances[msg.sender][x].interest));
+
                 isLocked = false;
                 return withdrawal.add(balances[msg.sender][x].interest);
             }
-            else if (balances[msg.sender][x].deposit >= amount){
-                msg.sender.transfer(amount);
-                balances[msg.sender][x].deposit = balances[msg.sender][x].deposit.sub(amount);
-                // TODO: interest
-                emit Withdraw(msg.sender, token, amount.add(balances[msg.sender][x].interest));
-                isLocked = false;
-                return amount.add(balances[msg.sender][x].interest);
-            } else {
-                revert("amount exceeds balance");
-            }
-}
+
+            require (balances[msg.sender][x].deposit >= amount, "amount exceeds balance");
+
+            balances[msg.sender][x].deposit = balances[msg.sender][x].deposit.sub(amount);
+            msg.sender.transfer(amount);
+
+            // TODO: interest
+            emit Withdraw(msg.sender, token, amount.add(balances[msg.sender][x].interest));
+
+            isLocked = false;
+            return amount.add(balances[msg.sender][x].interest);
+        }
+        
     function borrow(address token, uint256 amount)
         external
         override
@@ -131,6 +136,7 @@ contract Bank is IBank {
             emit Borrow(msg.sender, token, amount, _collateral_ratio);
 
             isLocked = false;
+            return _collateral_ratio;
         }
 
     function repay(address token, uint256 amount)
@@ -166,6 +172,7 @@ contract Bank is IBank {
 
             emit Repay(msg.sender, token, amount);
 
+            return _collateral_ratio;
             isLocked = false;
         }
 
@@ -182,7 +189,22 @@ contract Bank is IBank {
             require(account != msg.sender, "cannot liquidate own position");
             require(getCollateralRatio(token, account) < 15000, "healty position");
 
+            uint256 _amount_of_collateral = balances[account][1].deposit;
+            uint256 _amount_of_borrowed = borrowed[account];
+
+            require(msg.value == _amount_of_borrowed);
+
+            balances[account][1].deposit = 0;
+            balances[msg.sender][1].deposit = balances[msg.sender][1].deposit.add(_amount_of_collateral);
+            borrowed[account] = 0;
+
+            ERC20 t = ERC20(token);
+            require (t.transfer(msg.sender, _amount_of_collateral));
+
+            emit Liquidate(msg.sender, account, token, _amount_of_collateral, _amount_of_borrowed);
+
             isLocked = false;
+            return true;
         }
 
     function getCollateralRatio(address token, address account)
