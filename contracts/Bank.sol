@@ -91,7 +91,6 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
-<<<<<<< HEAD
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
             return balances[msg.sender][0].deposit;
         } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
@@ -99,9 +98,6 @@ contract Bank is IBank {
         } else {
             revert("token not supported");
         }
-=======
-        return balances[msg.sender][0].deposit;
->>>>>>> master
     }
 
     function initAccount() private {
@@ -123,10 +119,6 @@ contract Bank is IBank {
 
         // set lastInterestBlock to current block
         // FIXME: is block.number right?
-<<<<<<< HEAD
         //balances[msg.sender].lastInterestBlock = block.number;
-=======
-        balances[msg.sender][0].lastInterestBlock = block.number;
->>>>>>> master
     }
 }
