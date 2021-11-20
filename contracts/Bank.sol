@@ -47,14 +47,14 @@ contract Bank is IBank {
             uint256 withdrawal = balances[msg.sender][x].deposit;
             balances[msg.sender][x].deposit = 0;
             // TODO: interest
-            balances[msg.sender][x].interest += calculateDepositInterest(token);
+            balances[msg.sender][x].interest += calculateInterest(token);
             emit Withdraw(msg.sender, token, withdrawal);
             return withdrawal;
         }
         else if (balances[msg.sender][x].deposit >= amount){
             balances[msg.sender][x].deposit -=amount;
             // TODO: nterest
-            balances[msg.sender][x].interest += calculateDepositInterest(token);
+            balances[msg.sender][x].interest += calculateInterest(token);
             emit Withdraw(msg.sender, token, amount);
             return amount;
         } else {
@@ -115,16 +115,16 @@ contract Bank is IBank {
         // initialization and 'lastInterestBlock' is set to a non-zero value
         if(balances[msg.sender][0].lastInterestBlock == 0){
             balances[msg.sender][0] = Account(0, 0, 0);
-            calculateDepositInterest(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+            calculateInterest(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
         }
 
         if(balances[msg.sender][1].lastInterestBlock == 0){
             balances[msg.sender][1] = Account(0, 0, 0);
-            calculateDepositInterest(0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C);
+            calculateInterest(0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C);
         }
     }
 
-    function calculateDepositInterest(address token) private returns (uint256){
+    function calculateInterest(address token) private returns (uint256){
         // TODO: actual calculation not implemented yet
         uint x;
         token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
