@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "hardhat/console.sol";
 
 contract Bank is IBank {
+    using SafeMath for uint256;
 
     // The keyword "public" makes variables
     // accessible from other contracts
@@ -36,23 +37,22 @@ contract Bank is IBank {
             require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == token,  "token not supported");
             require(amount > 0, "Amount to deposit should be greater than 0");
 
-            uint x;
-            token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+            uint x = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
 
             balances[msg.sender][x].interest = balances[msg.sender][x].interest.add(balances[msg.sender][x].deposit.div(10000).mul(block.number.sub(balances[msg.sender][x].lastInterestBlock)).mul(3));
             balances[msg.sender][x].lastInterestBlock = block.number;
 
-            if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
-
+            if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
                 require(msg.value == amount, "given amount and transferred money didnt match");
+
                 balances[msg.sender][0].deposit = balances[msg.sender][0].deposit.add(amount);
                 emit Deposit(msg.sender, token, amount.add(balances[msg.sender][0].interest));
-            } else if (token == hakToken){
+            } else if (token == hakToken) {
                 ERC20 t = ERC20(token);
-                if(t.transferFrom(msg.sender, address(this), amount)){
-                    balances[msg.sender][1].deposit = balances[msg.sender][1].deposit.add(amount);
-                    emit Deposit(msg.sender, token, amount.add(balances[msg.sender][1].interest));
-                }
+                require(t.transferFrom(msg.sender, address(this), amount));
+
+                balances[msg.sender][1].deposit = balances[msg.sender][1].deposit.add(amount);
+                emit Deposit(msg.sender, token, amount.add(balances[msg.sender][1].interest));
             }
 
             isLocked = false;
@@ -68,8 +68,7 @@ contract Bank is IBank {
             isLocked = true;
 
             // x = Account-Index (0 for ETH, 1 for HAK)
-            uint x;
-            token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+            uint x = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
 
             balances[msg.sender][x].interest = balances[msg.sender][x].interest.add(balances[msg.sender][x].deposit.div(10000).mul(block.number.sub(balances[msg.sender][x].lastInterestBlock)).mul(3));
             balances[msg.sender][x].lastInterestBlock = block.number;
@@ -146,8 +145,7 @@ contract Bank is IBank {
 
            require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, "token not supported");
 
-            uint x;
-            token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
+            uint x = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
 
             balances[msg.sender][x].interest = balances[msg.sender][x].interest.add(balances[msg.sender][x].deposit.div(10000).mul(block.number.sub(balances[msg.sender][x].lastInterestBlock)).mul(3));
             balances[msg.sender][x].lastInterestBlock = block.number;
@@ -198,10 +196,7 @@ contract Bank is IBank {
             uint256 _deposit = convertHAKToETH(balances[account][1].deposit);
             uint256 _interest = convertHAKToETH(balances[account][1].interest);
             uint256 _borrowed = borrowed[account];
-            console.log(_interest);
 
-            console.log(_deposit);
-            console.log(_borrowed);
             if (_deposit == 0) {
                 return 0;
             }
@@ -223,15 +218,15 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
-
-        if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
-            uint256 interest = ((block.number - balances[msg.sender][0].lastInterestBlock) * 3)+balances[msg.sender][0].interest;
-            return balances[msg.sender][0].deposit+interest;
-        } else if (token == hakToken){
-            uint256 interest = ((block.number - balances[msg.sender][1].lastInterestBlock) * 3)+balances[msg.sender][1].interest;
-            return balances[msg.sender][1].deposit+interest;
-        } else {
-            revert("token not supported");
+            if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
+                uint256 interest = ((block.number - balances[msg.sender][0].lastInterestBlock) * 3)+balances[msg.sender][0].interest;
+                return balances[msg.sender][0].deposit+interest;
+            } else if (token == hakToken){
+                uint256 interest = ((block.number - balances[msg.sender][1].lastInterestBlock) * 3)+balances[msg.sender][1].interest;
+                return balances[msg.sender][1].deposit+interest;
+            } else {
+                revert("token not supported");
+            }
         }
 
     function initAccount() private {
@@ -251,10 +246,8 @@ contract Bank is IBank {
 
     function calculateInterest(address token) private returns (uint256){
         // TODO: actual calculation not implemented yet
-        uint x;
-        token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? x = 0 : x = 1;
-
-        uint256 interest = ((block.number - balances[msg.sender][x].lastInterestBlock) * 3);
+        uint x = token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 0 : 1;
+        uint256 interest = (block.number.sub(balances[msg.sender][x].lastInterestBlock)).mul(3);
 
         // set lastInterestBlock to current block
 
