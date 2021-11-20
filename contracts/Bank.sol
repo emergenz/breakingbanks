@@ -29,14 +29,17 @@ contract Bank is IBank {
         require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == token,  "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
+
+            balances[msg.sender][0].interest += calculateInterest(token);
             require(msg.value == amount, "given amount and transferred money didnt match");
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
-            emit Deposit(msg.sender, token, amount);
+            emit Deposit(msg.sender, token, amount + balances[msg.sender][0].interest);
         } else if (token == hakToken){
             ERC20 t = ERC20(token);
             if(t.transferFrom(msg.sender, address(this), amount)){
                 balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
-                emit Deposit(msg.sender, token, amount);
+                balances[msg.sender][1].interest += calculateInterest(token);
+                emit Deposit(msg.sender, token, amount+balances[msg.sender][1].interest);
             }
         }
         isLocked = false;
@@ -119,9 +122,14 @@ contract Bank is IBank {
         public
         override
         returns (uint256) {
+
         if(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE){
-            return balances[msg.sender][0].deposit;
+
+            uint256 interest = ((block.number - balances[msg.sender][0].lastInterestBlock) * 3);
+            return balances[msg.sender][0].deposit+interest;
         } else if (token == hakToken){
+
+            uint256 interest = ((block.number - balances[msg.sender][1].lastInterestBlock) * 3);
             return balances[msg.sender][1].deposit;
         } else {
             revert("token not supported");
