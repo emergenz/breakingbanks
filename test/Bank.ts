@@ -86,6 +86,7 @@ describe("Bank contract", function () {
       await hak.transfer(await acc1.getAddress(), amount);
       await hak1.approve(bank.address, amount);
       expect(await hak.allowance(await acc1.getAddress(), bank.address)).equals(amount);
+      console.log(hak.address);
       await bank1.deposit(hak.address, amount);
       expect(await bank1.getBalance(hak.address)).equals(amount);
       expect(await hak.balanceOf(await acc1.getAddress())).equals(0);

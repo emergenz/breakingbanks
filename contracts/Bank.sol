@@ -12,9 +12,11 @@ contract Bank is IBank {
     // Account[0] is ETH-Account
     // Account[1] is HAK-Account
     mapping (address => Account[2]) public balances;
+    address hakToken;
 
 
     constructor(address _priceOracle, address _hakToken) {
+        hakToken = _hakToken;
     }
     function deposit(address token, uint256 amount)
         payable
@@ -22,11 +24,11 @@ contract Bank is IBank {
         override
         returns (bool) {
         initAccount();
-       require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C, "token not supported");
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || hakToken == 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853,  "token not supported");
         require(amount > 0, "Amount to deposit should be greater than 0");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ){
             balances[msg.sender][0].deposit = balances[msg.sender][0].deposit + amount;
-        } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+        } else if (token == hakToken){
             balances[msg.sender][1].deposit = balances[msg.sender][1].deposit + amount;
         }
         emit Deposit(msg.sender, token, amount);
