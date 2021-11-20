@@ -4,7 +4,7 @@ pragma solidity 0.7.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IPriceOracle.sol";
 
-contract PriceOracleTest is IPriceOracle, Ownable {
+contract PriceOracleTest1 is IPriceOracle, Ownable {
     mapping(address => uint256) virtualPrice;
     function getVirtualPrice(address token)
         view
