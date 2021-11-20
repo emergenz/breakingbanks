@@ -1,0 +1,56 @@
+1) re-entrancy: !!!
+ - always use built-in transfer()
+ - always make all state changes to variables before any ether is sent
+ - good practice: calls to unknown adresses (out of the contract) should be put as the last operation in a function (checks-effects-interactions pattern)
+ - add mutex (lock contract during code execution)
+
+2) over/underflow: !!!
+ - use OpenZeppelin's SafeMath.sol
+ - never do normal math.
+
+3) unexpected ether:
+ - don't use (abuse) this.balance
+ - don't depend on exact balance values (eg. require(this.balance == 2))
+ - use a self-defined variable to track balance instead
+
+4) delegatecall:
+ - don't use DELEGATECALL (use library instead)
+ - force library to be stateless
+
+5) default visibilities: !!!
+ - always declare visibility
+
+6) entropy illusion: ---
+
+7) external contract referencing ---
+
+8) short adress/parameter attack ???
+ - always validate input (especially adresses)
+
+9) unchecked CALL return values !!!
+ - don't use send() (use transfer() instead, transfer reverts)
+ - always check return value of send() (as it's not reverted)
+ - use a withdrawal pattern (if possible) and isolate send functionality
+
+10) race conditions / front running --
+ - use upper bound on gasPrice
+
+11) dos --
+ - limit gas price
+ - don't loop through data structures which can be manipulated externaly (gas)
+
+12) block timestamp manipulation --
+ - don't use timestamps for entropy
+ - use block.number over timestamp
+
+13) constructors with care
+ - always use constructor keyword
+
+14) uninitialised storage pointers ...
+
+15) floating points and precision !!!
+ - use large numerators in fractions
+ - mind order of operations
+
+16) Tx.Origin Authentication
+ - don't use tx.origin for authorisation
