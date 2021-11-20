@@ -136,8 +136,11 @@ contract Bank is IBank {
         external
         override
         returns (bool) {
-        initAccount();
-    }
+            initAccount();
+            require(token == hakToken, "token not supported");
+            require(account != msg.sender, "cannot liquidate own position");
+            require(getCollateralRatio(token, account) < 15000, "healty position");
+        }
 
     function getCollateralRatio(address token, address account)
         view
@@ -151,13 +154,6 @@ contract Bank is IBank {
             uint256 _deposit = convertHAKToETH(balances[account][1].deposit);
             uint256 _interest = convertHAKToETH(balances[account][1].interest);
             uint256 _borrowed = borrowed[account];
-
-           /* console.log("deposit: ");
-            console.log(_deposit);
-            console.log("interest: ");
-            console.log(_interest);
-            console.log("borrowed: ");
-            console.log(_borrowed);*/
 
             if (_deposit == 0) {
                 return 0;
