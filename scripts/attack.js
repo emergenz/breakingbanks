@@ -33,8 +33,6 @@ async function main() {
   const Bad = await hre.ethers.getContractFactory("Bad");
   const bad = await Bad.connect(addr1).deploy(hak.address, bank.address, addr1.address);
   console.log("Re-Entrancy: " + await bad.connect(addr1).call_liquidate());
-
-  //console.log("Liquidate: " + await bank.connect(addr2).liquidate(hak.address, addr1.address, {value: 10000}));
 }
 
 main()
