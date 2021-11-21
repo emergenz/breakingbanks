@@ -953,8 +953,6 @@ contract Test is IBank {
  
         accountDebt[msg.sender].deposit = accountDebt[msg.sender].deposit.add(amount);
         msg.sender.transfer(amount);
-        console.log("was here!");
-        console.log(msg.sender);
         emit Borrow(msg.sender, token, amount, _getCollateralRatio(token, msg.sender));
         return _getCollateralRatio(token, msg.sender);
     }
@@ -995,6 +993,7 @@ contract Test is IBank {
         // Prevent a user from liquidating own account
         require(account != msg.sender, "cannot liquidate own position");
         // Collateral ratio must be lower than 150%
+        console.log(_getCollateralRatio(token, account));
         require((_getCollateralRatio(token, account) < 15000 && _getCollateralRatio(token, account) > 0), "healty position");
         // Liquidator must have sufficient ETH
         require(msg.value >= accountDebt[account].deposit, "insufficient ETH sent by liquidator");
@@ -1006,7 +1005,7 @@ contract Test is IBank {
              sendBackAmount = DSMath.sub(msg.value, accountDebt[account].deposit);
         } 
         uint256 collateralAmount = accountHAK[account].deposit;
-        msg.sender.transfer(collateralAmount);
+        _HAK.transfer(msg.sender, collateralAmount);
         accountDebt[account].deposit = 0;
         accountHAK[account].deposit = 0;
         emit Liquidate(msg.sender, account, token, collateralAmount, sendBackAmount);

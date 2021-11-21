@@ -25,7 +25,7 @@ contract Bad {
     }
 
     function call_liquidate() public {
-        target.liquidate(hak_address, addr2);
+        target.liquidate{value: 10000}(hak_address, addr2);
     }
 
     fallback() external payable {
