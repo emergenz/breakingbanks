@@ -15,3 +15,8 @@ $ npm install --save-dev hardhat
 $ npx hardhat compile
 $ npx hardhat test
 ```
+
+
+## Our Team
+Teamname Eierreis
+https://quantstamp.github.io/hackatum21-challenge-website/
