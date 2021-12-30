@@ -18,5 +18,7 @@ $ npx hardhat test
 
 
 ## Our Team
-Teamname Eierreis
+### Teamname Eierreis
 https://quantstamp.github.io/hackatum21-challenge-website/
+### Smart Contract
+https://goerli.etherscan.io/address/0x3F4a9C114CF6Aca4f1cbf7F473Ac3eE7Fd1567b0
